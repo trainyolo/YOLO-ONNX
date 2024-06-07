@@ -52,6 +52,29 @@ def post_process(outp, conf_thres=0.7, iou_thres=0.5):
     
     return boxes[indices], scores[indices], class_ids[indices]
 
+def post_process_pose(outp, conf_thres=0.7, iou_thres=0.5):
+    preds = np.squeeze(outp[0]).T
+
+    # Remove low-conf preds
+    scores = np.max(preds[:, 4:5], axis=1)
+    keep = scores > conf_thres
+
+    # get boxes, scores, class_ids and kps
+    preds = preds[keep, :]
+    boxes = preds[:, :4]
+    boxes = xywh2xyxy(boxes)
+
+    scores = np.max(preds[:, 4:5], axis=1)
+    class_ids = np.argmax(preds[:, 4:5], axis=1)
+
+    kps = preds[:, 5:]
+    kps = kps.reshape((-1, 17, 3))
+
+    # do multiclass nms
+    indices = multiclass_nms(boxes, scores, class_ids, iou_thres=iou_thres)
+    
+    return boxes[indices], scores[indices], class_ids[indices], kps[indices]
+
 def xywh2xyxy(boxes):
     new_boxes = np.copy(boxes)
     new_boxes[..., 0] = boxes[..., 0] - boxes[..., 2] / 2
@@ -111,6 +134,12 @@ def scale_boxes(boxes, orig_size, scaled_size):
     boxes = boxes * scale
     return boxes
 
+def scale_kps(kps, orig_size, scaled_size):
+    ox, oy, sx, sy = *orig_size, *scaled_size
+    scale = np.array([ox/sx, oy/sy])
+    kps[:,:,:2] = kps[:,:,:2] * scale
+    return kps
+
 def parse_detections(boxes, scores, class_ids):
     detections = []
     for box, score, class_id in zip(boxes, scores, class_ids):
@@ -118,5 +147,16 @@ def parse_detections(boxes, scores, class_ids):
             'bbox': [int(b) for b in box],
             'score': float(round(score, 3)),
             'class_id': int(class_id)
+        })
+    return detections
+
+def parse_detections_w_kps(boxes, scores, class_ids, kps):
+    detections = []
+    for box, score, class_id, kp in zip(boxes, scores, class_ids, kps):
+        detections.append({
+            'bbox': [int(b) for b in box],
+            'score': float(round(score, 3)),
+            'class_id': int(class_id),
+            'kps': kp
         })
     return detections
