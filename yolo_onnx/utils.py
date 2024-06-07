@@ -157,6 +157,6 @@ def parse_detections_w_kps(boxes, scores, class_ids, kps):
             'bbox': [int(b) for b in box],
             'score': float(round(score, 3)),
             'class_id': int(class_id),
-            'kps': kp
+            'kps': [k.tolist() for k in kp]
         })
     return detections
