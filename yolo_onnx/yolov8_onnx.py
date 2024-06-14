@@ -12,6 +12,7 @@ class YOLOv8:
             assert False, f'Device {device} is not available.'
 
         self.session = onnxruntime.InferenceSession(model_path, providers=providers)
+        self.half = half
 
 
     def __call__(self, img, size=640, conf_thres=0.7, iou_thres=0.5):
