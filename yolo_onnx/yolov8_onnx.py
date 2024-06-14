@@ -3,7 +3,7 @@ from . import utils
 
 class YOLOv8:
 
-    def __init__(self, model_path, device="cpu"):
+    def __init__(self, model_path, device="CPU", half=False):
         if device == 'cpu':
             providers = ['CPUExecutionProvider']
         elif device == 'gpu':
@@ -33,6 +33,8 @@ class YOLOv8:
         return detections
 
     def inference(self, input_tensor):
+        if self.half:
+            input_tensor = np.float16(input_tensor)
         outputs = self.session.run(['output0'], {'images': input_tensor})
         return outputs
     
