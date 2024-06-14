@@ -35,9 +35,11 @@ class YOLOv8:
         return detections
 
     def inference(self, input_tensor):
-        if self.half:
+        if self.half: # convert to float16
             input_tensor = np.float16(input_tensor)
         outputs = self.session.run(['output0'], {'images': input_tensor})
+        if self.half: # convert back to float32
+            outputs = np.float32(outputs)
         return outputs
     
 class YOLOv8Pose(YOLOv8):
