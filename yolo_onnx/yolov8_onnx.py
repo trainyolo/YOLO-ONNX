@@ -4,7 +4,7 @@ import numpy as np
 
 class YOLOv8:
 
-    def __init__(self, model_path, device="CPU", half=False):
+    def __init__(self, model_path, device="cpu", half=False):
         if device == 'cpu':
             providers = ['CPUExecutionProvider']
         elif device == 'gpu':
